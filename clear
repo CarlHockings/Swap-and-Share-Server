@@ -1,4 +1,0 @@
-<entity name="Item" representedClassName="Item" syncable="YES">
-    <attribute name="timestamp" optional="YES" attributeType="Date" />
-    <!-- other attributes -->
-</entity>
