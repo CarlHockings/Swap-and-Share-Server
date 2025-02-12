@@ -27,16 +27,14 @@ const verifyAPIKey = (req, res, next) => {
     next();
 };
 
-// ✅ Email Confirmation Route
-app.get("/", (req, res) => {
-    const { access_token } = req.query;
-    if (access_token) {
-        res.send("Email confirmation successful! You can now log in.");
-        console.log("Access token:", access_token);
-    } else {
-        res.send("Hello! API is running.");
-    }
+// ✅ Email Verification Route (No token or code, just a simple route)
+app.get("/auth-user", (req, res) => {
+    // You can add any additional logic here if needed, or just display a message
+    res.send("Email verification successful! You can now log in.");
+    console.log("Email verification successful.");
 });
+
+
 
 // ✅ User Deletion Route
 const tables = {
