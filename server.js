@@ -27,12 +27,73 @@ const verifyAPIKey = (req, res, next) => {
     next();
 };
 
-// ✅ Email Verification Route (No token or code, just a simple route)
-app.get("/auth-user", (req, res) => {
-    // You can add any additional logic here if needed, or just display a message
-    res.send("Email verification successful! You can now log in.");
-    console.log("Email verification successful.");
+// ✅ Email Verification Route
+app.get("/auth-user", async (req, res) => {
+    const { access_token } = req.query; // Extract token from the URL
+
+    if (!access_token) {
+        return res.status(400).json({ error: "No access token found." });
+    }
+
+    try {
+        // Verify token and get user info
+        const { data: user, error } = await axios.get(
+            `${SUPABASE_URL}/auth/v1/user`,
+            {
+                headers: {
+                    apikey: SERVICE_ROLE_KEY,
+                    Authorization: `Bearer ${access_token}`,
+                },
+            }
+        );
+
+        if (error || !user) {
+            return res.status(401).json({ error: "Invalid access token" });
+        }
+
+        console.log("✅ User authenticated:", user.email);
+        res.json({ message: "Login successful!", user });
+    } catch (error) {
+        console.error("❌ Authentication failed:", error);
+        res.status(500).json({ error: "Failed to authenticate user" });
+    }
 });
+
+
+// ✅ send-magic-link Route
+app.post("/send-magic-link", async (req, res) => {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: "Email is required" });
+
+    try {
+        const { data, error } = await axios.post(
+            `${SUPABASE_URL}/auth/v1/magiclink`,
+            {
+                email,
+                redirect_to: "myapp://auth", // 🔹 App's redirect URI
+            },
+            {
+                headers: {
+                    apikey: SERVICE_ROLE_KEY,
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+
+        // Check for errors
+        if (error) {
+            throw error;
+        }
+
+        // If successful, return the data (which could include a message or other info)
+        res.json({ message: "Magic link sent successfully!", data });
+    } catch (error) {
+        res.status(500).json({ error: "Failed to send Magic Link", details: error.message });
+    }
+});
+
+
+
 
 
 
