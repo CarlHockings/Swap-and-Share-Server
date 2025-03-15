@@ -70,7 +70,7 @@ app.post("/send-magic-link", async (req, res) => {
             `${SUPABASE_URL}/auth/v1/magiclink`,
             {
                 email,
-                redirect_to: `https://swap-and-share-server.onrender.com/auth-user`,
+                redirect_to: `https://swap-and-share-server.onrender.com/auth-user?fix=true`, 
             },
             {
                 headers: {
