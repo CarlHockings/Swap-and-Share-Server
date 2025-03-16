@@ -31,6 +31,9 @@ const verifyAPIKey = (req, res, next) => {
 app.get("/auth-user", async (req, res) => {
     const { access_token } = req.query; // Extract access_token from the query parameters
     
+    // Log the access token to check if it's passed correctly
+    console.log("Access Token:", access_token);
+    
     if (!access_token) {
         return res.status(400).json({ error: "No access token found." });
     }
@@ -46,6 +49,10 @@ app.get("/auth-user", async (req, res) => {
                 },
             }
         );
+        
+        
+        // Log the user data to make sure it's correct
+        console.log("User data from Supabase:", user);
 
         if (error || !user) {
             return res.status(401).json({ error: "Invalid access token" });
