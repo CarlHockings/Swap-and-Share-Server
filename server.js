@@ -27,11 +27,38 @@ const verifyAPIKey = (req, res, next) => {
     next();
 };
 
-// ✅ Email Verification Route (No token or code, just a simple route)
-app.get("/auth-user", (req, res) => {
-    // You can add any additional logic here if needed, or just display a message
-    res.send("Email verification successful! You can now log in.");
-    console.log("Email verification successful.");
+// ✅ Email Verification Route 
+app.get("/auth-user", async (req, res) => {
+    const { access_token } = req.query; // Extract access_token from the query parameters
+    
+    if (!access_token) {
+        return res.status(400).json({ error: "No access token found." });
+    }
+
+    try {
+        // Use the access_token to get user info from Supabase
+        const { data: user, error } = await axios.get(
+            `${SUPABASE_URL}/auth/v1/user`, // Supabase endpoint to get user info using the access token
+            {
+                headers: {
+                    apikey: SERVICE_ROLE_KEY, // Admin API key
+                    Authorization: `Bearer ${access_token}`, // Authorization with the access token
+                },
+            }
+        );
+
+        if (error || !user) {
+            return res.status(401).json({ error: "Invalid access token" });
+        }
+
+        console.log("✅ User authenticated:", user.email);
+
+        // Redirect back to the frontend with the access token in the URL
+        res.redirect(`your-app://login-success?token=${access_token}`);
+    } catch (error) {
+        console.error("❌ Authentication failed:", error);
+        res.status(500).json({ error: "Failed to authenticate user" });
+    }
 });
 
 
