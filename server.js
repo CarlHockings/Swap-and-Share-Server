@@ -27,44 +27,58 @@ const verifyAPIKey = (req, res, next) => {
     next();
 };
 
-// ✅ Email Verification Route 
+// ✅ Auth User Route (fetch user by token)
 app.get("/auth-user", async (req, res) => {
-    const { access_token } = req.query; // Extract access_token from the query parameters
-    
-    // Log the access token to check if it's passed correctly
+    const { access_token } = req.query;
     console.log("Access Token:", access_token);
-    
+
     if (!access_token) {
         return res.status(400).json({ error: "No access token found." });
     }
 
     try {
-        // Use the access_token to get user info from Supabase
-        const { data: user, error } = await axios.get(
-            `${SUPABASE_URL}/auth/v1/user`, // Supabase endpoint to get user info using the access token
-            {
-                headers: {
-                    apikey: SERVICE_ROLE_KEY, // Admin API key
-                    Authorization: `Bearer ${access_token}`, // Authorization with the access token
-                },
-            }
-        );
-        
-        
-        // Log the user data to make sure it's correct
-        console.log("User data from Supabase:", user);
+        const response = await axios.get(`${SUPABASE_URL}/auth/v1/user`, {
+            headers: {
+                apikey: SERVICE_ROLE_KEY,
+                Authorization: `Bearer ${access_token}`,
+            },
+        });
 
-        if (error || !user) {
-            return res.status(401).json({ error: "Invalid access token" });
-        }
+        const user = response.data;
 
-        console.log("✅ User authenticated:", user.email);
+        console.log("✅ Supabase user:", user);
 
-        // Redirect back to the frontend with the access token in the URL
+        return res.status(200).json({ user });
+    } catch (error) {
+        console.error("❌ Auth failed:", error.response?.data || error.message);
+        return res.status(401).json({ error: "Invalid access token" });
+    }
+});
+
+// ✅ New: Email Verification Redirect Handler
+app.get("/login-success", async (req, res) => {
+    const { access_token } = req.query;
+    console.log("🔁 Redirect callback with token:", access_token);
+
+    if (!access_token) {
+        return res.status(400).json({ error: "Missing access_token" });
+    }
+
+    try {
+        const response = await axios.get(`${SUPABASE_URL}/auth/v1/user`, {
+            headers: {
+                apikey: SERVICE_ROLE_KEY,
+                Authorization: `Bearer ${access_token}`,
+            },
+        });
+
+        const user = response.data;
+        console.log("✅ Verified user on redirect:", user.email);
+
         res.redirect(`your-app://login-success?token=${access_token}`);
     } catch (error) {
-        console.error("❌ Authentication failed:", error);
-        res.status(500).json({ error: "Failed to authenticate user" });
+        console.error("❌ Verification redirect failed:", error.response?.data || error.message);
+        res.status(500).json({ error: "Failed to verify access token" });
     }
 });
 
@@ -120,4 +134,4 @@ app.delete("/delete-user", verifyAPIKey, async (req, res) => {
 // ✅ Start the server
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
-});
+});s
