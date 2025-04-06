@@ -57,7 +57,7 @@ app.get("/auth-user", async (req, res) => {
 
 // ✅ New: Email Verification Redirect Handler
 app.get("/login-success", async (req, res) => {
-    const { access_token } = req.query;
+    const { access_token, refresh_token } = req.query;
     console.log("🔁 Redirect callback with token:", access_token);
 
     if (!access_token) {
@@ -75,12 +75,14 @@ app.get("/login-success", async (req, res) => {
         const user = response.data;
         console.log("✅ Verified user on redirect:", user.email);
 
-        res.redirect(`your-app://login-success?token=${access_token}`);
+        // ✅ Redirect to your app with token(s)
+        res.redirect(`your-app://login-success?token=${access_token}&refresh_token=${refresh_token}`);
     } catch (error) {
         console.error("❌ Verification redirect failed:", error.response?.data || error.message);
         res.status(500).json({ error: "Failed to verify access token" });
     }
 });
+
 
 
 
